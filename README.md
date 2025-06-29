@@ -1,34 +1,52 @@
 Простая система событий
 
-Event<> evt; - объявляем эвент.
+```cpp
+#include "Event.h"
+Event<> evt; // объявляем эвент.
 
-void onEvt()
+void onEvt() //Функция хендлер
 {
 }
 
 class EventListener
 {
+public:
   EventListener()
   {
-      evt.AddHandler(*this, &EventListener::OnEvent);
+      evt.AddHandler(*this, &EventListener::OnEvent); //В конструкторе подписались
   }
   ~EventListener()
   {
-      evt.RemoveHandler(*this, &EventListener::OnEvent);
+      evt.RemoveHandler(*this, &EventListener::OnEvent); //В деструкторе отписались
   }
-  void OnEvent()
+
+  Event<EventListener&> onGlobalEventHandled;
+private:
+  void OnEvent() //Функция-член хендлер
   {
+      onGlobalEventHandled(*this); //диспатчим событие
   }
 };
+
+void OnEventFromListener(EventListener& object)
+{
+    object.onGlobalEventHandled.RemoveHandler(&OnEventFromListener); //Нам нужно было только разок получить событие и отписываемся
+}
 
 int main()
 {
   EventListener listenerObj; //Объект подписывается на событие
-  evt.AddHandler(&onEvent); // Подписываем свободную функцию
+  listenerObj.onGlobalEventHandled.AddHandler(&OnEventFromListener); //Подписываемся на событие объекта
+  evt.AddHandler(&onEvt); // Подписываем свободную функцию
+  evt.AddHandler(&onEvt); // Повторная подписка будет проигнорирована
 
   //evt.AddHandler([]() {}); //Ошибка компиляции - лямбду нельзя использовать
 
   evt(); //Отправим событие
   
-  evt.RemoveHandler(&onEvent); //Отписываем свободную функци
+  evt.RemoveHandler(&onEvt); //Отписываем свободную функци
+  listenerObj.onGlobalEventHandled.RemoveHandler(&OnEventFromListener); //Отписываемся в конце использования - двойная отписка не страшна
+  
+  return 0;
 }
+```
