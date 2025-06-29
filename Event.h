@@ -7,9 +7,6 @@
 #include "details.inl"
 
 template<typename ...Args>
-class Event;
-
-template<typename ...Args>
 class EventHandler
 {
 public:
